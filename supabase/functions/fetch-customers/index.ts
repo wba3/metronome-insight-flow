@@ -13,7 +13,10 @@ serve(async (req) => {
 
   try {
     const metronomeApiKey = Deno.env.get('METRONOME_API_KEY');
-    const metronomeBaseUrl = Deno.env.get('METRONOME_API_BASE_URL') || 'https://api.metronome.com';
+    const baseFromEnv = Deno.env.get('METRONOME_API_BASE_URL') || 'https://api.metronome.com';
+    const metronomeBaseUrl = (baseFromEnv.includes('app.metronome.com') || baseFromEnv.includes('sandbox'))
+      ? 'https://api.metronome.com'
+      : baseFromEnv;
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -21,7 +24,7 @@ serve(async (req) => {
       throw new Error('METRONOME_API_KEY not configured');
     }
 
-    const apiUrl = `${metronomeBaseUrl}/v1/customers`;
+    const apiUrl = `${metronomeBaseUrl}/v1/customers/list`;
     console.log('Fetching customers from Metronome API:', apiUrl);
 
     // Call Metronome API

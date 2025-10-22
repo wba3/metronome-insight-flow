@@ -13,6 +13,7 @@ serve(async (req) => {
 
   try {
     const metronomeApiKey = Deno.env.get('METRONOME_API_KEY');
+    const metronomeBaseUrl = Deno.env.get('METRONOME_API_BASE_URL') || 'https://api.metronome.com';
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -22,10 +23,11 @@ serve(async (req) => {
 
     const { customer_id } = await req.json();
 
-    console.log('Fetching commit balances for customer:', customer_id);
+    const apiUrl = `${metronomeBaseUrl}/v1/contracts/customerBalances`;
+    console.log('Fetching commit balances for customer:', customer_id, 'from:', apiUrl);
 
     // Call Metronome API for contract balances
-    const metronomeResponse = await fetch('https://api.metronome.com/v1/contracts/customerBalances', {
+    const metronomeResponse = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${metronomeApiKey}`,

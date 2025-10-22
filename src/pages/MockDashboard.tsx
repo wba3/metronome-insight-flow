@@ -101,13 +101,13 @@ const MockDashboard = () => {
 
   const MetricCard = ({ title, value, change, icon: Icon, trend }: any) => (
     <Card className="border-none shadow-md">
-      <CardContent className="p-5">
+      <CardContent className="p-3 sm:p-5">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{title}</p>
-            <p className="text-2xl font-semibold">{value}</p>
+            <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide">{title}</p>
+            <p className="text-lg sm:text-2xl font-semibold">{value}</p>
             {change && (
-              <div className="flex items-center gap-1 text-xs">
+              <div className="flex items-center gap-1 text-[10px] sm:text-xs">
                 {trend === "up" ? (
                   <TrendingUp className="h-3 w-3" style={{ color: colors.primary }} />
                 ) : (
@@ -119,8 +119,8 @@ const MockDashboard = () => {
               </div>
             )}
           </div>
-          <div className="p-2 rounded-lg" style={{ backgroundColor: `${colors.primary}15` }}>
-            <Icon className="h-5 w-5" style={{ color: colors.primary }} />
+          <div className="p-1.5 sm:p-2 rounded-lg" style={{ backgroundColor: `${colors.primary}15` }}>
+            <Icon className="h-4 w-4 sm:h-5 sm:w-5" style={{ color: colors.primary }} />
           </div>
         </div>
       </CardContent>
@@ -128,8 +128,8 @@ const MockDashboard = () => {
   );
 
   const renderUsageDashboard = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
         <MetricCard
           title="API Calls (Jun)"
           value={formatNumber(85000)}
@@ -154,18 +154,18 @@ const MockDashboard = () => {
       </div>
 
       <Card className="border-none shadow-md">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-lg font-semibold">Usage Trends</CardTitle>
+        <CardHeader className="pb-3 sm:pb-4">
+          <CardTitle className="text-base sm:text-lg font-semibold">Usage Trends</CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="api" className="w-full">
             <TabsList className="grid w-full grid-cols-3 mb-4">
-              <TabsTrigger value="api">API Calls</TabsTrigger>
-              <TabsTrigger value="data">Data Processing</TabsTrigger>
-              <TabsTrigger value="compute">Compute Hours</TabsTrigger>
+              <TabsTrigger value="api" className="text-xs sm:text-sm">API Calls</TabsTrigger>
+              <TabsTrigger value="data" className="text-xs sm:text-sm">Data</TabsTrigger>
+              <TabsTrigger value="compute" className="text-xs sm:text-sm">Compute</TabsTrigger>
             </TabsList>
             <TabsContent value="api" className="mt-0">
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={250}>
                 <AreaChart data={usageData}>
                   <defs>
                     <linearGradient id="colorApi" x1="0" y1="0" x2="0" y2="1">
@@ -189,7 +189,7 @@ const MockDashboard = () => {
               </ResponsiveContainer>
             </TabsContent>
             <TabsContent value="data" className="mt-0">
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={250}>
                 <LineChart data={usageData}>
                   <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                   <XAxis dataKey="month" fontSize={12} />
@@ -206,7 +206,7 @@ const MockDashboard = () => {
               </ResponsiveContainer>
             </TabsContent>
             <TabsContent value="compute" className="mt-0">
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={usageData}>
                   <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                   <XAxis dataKey="month" fontSize={12} />
@@ -223,8 +223,8 @@ const MockDashboard = () => {
   );
 
   const renderCommitsDashboard = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
         <MetricCard
           title="Total Commitment"
           value={formatCurrency(commitData.total)}
@@ -247,10 +247,10 @@ const MockDashboard = () => {
       </div>
 
       <Card className="border-none shadow-md">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-lg font-semibold">Commitment Drawdown</CardTitle>
+        <CardHeader className="pb-3 sm:pb-4">
+          <CardTitle className="text-base sm:text-lg font-semibold">Commitment Drawdown</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4 sm:space-y-6">
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="font-medium">Usage Progress</span>
@@ -268,8 +268,8 @@ const MockDashboard = () => {
           </div>
 
           <div>
-            <h4 className="text-sm font-semibold mb-4">Monthly Consumption</h4>
-            <ResponsiveContainer width="100%" height={250}>
+            <h4 className="text-xs sm:text-sm font-semibold mb-3 sm:mb-4">Monthly Consumption</h4>
+            <ResponsiveContainer width="100%" height={200}>
               <BarChart data={commitData.monthlyBurn}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                 <XAxis dataKey="month" fontSize={12} />
@@ -280,14 +280,14 @@ const MockDashboard = () => {
             </ResponsiveContainer>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-            <div className="text-center p-4 bg-muted/30 rounded-lg">
-              <p className="text-xs text-muted-foreground mb-1">Projected Completion</p>
-              <p className="text-lg font-semibold">Dec 2025</p>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 pt-4 border-t">
+            <div className="text-center p-3 sm:p-4 bg-muted/30 rounded-lg">
+              <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Projected Completion</p>
+              <p className="text-base sm:text-lg font-semibold">Dec 2025</p>
             </div>
-            <div className="text-center p-4 bg-muted/30 rounded-lg">
-              <p className="text-xs text-muted-foreground mb-1">Renewal Status</p>
-              <Badge variant="outline" style={{ borderColor: colors.primary, color: colors.primary }}>
+            <div className="text-center p-3 sm:p-4 bg-muted/30 rounded-lg">
+              <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Renewal Status</p>
+              <Badge variant="outline" className="text-xs" style={{ borderColor: colors.primary, color: colors.primary }}>
                 On Track
               </Badge>
             </div>
@@ -298,22 +298,22 @@ const MockDashboard = () => {
   );
 
   const renderInvoiceDashboard = () => (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <Card className="border-none shadow-md">
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-semibold">Current Invoice</CardTitle>
-            <div className="text-right">
+        <CardHeader className="pb-3 sm:pb-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <CardTitle className="text-base sm:text-lg font-semibold">Current Invoice</CardTitle>
+            <div className="text-left sm:text-right">
               <p className="text-xs text-muted-foreground">June 2025</p>
-              <p className="text-2xl font-semibold">{formatCurrency(invoiceData.total)}</p>
+              <p className="text-xl sm:text-2xl font-semibold">{formatCurrency(invoiceData.total)}</p>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
             <div>
-              <h4 className="text-sm font-semibold mb-4">Invoice Breakdown</h4>
-              <ResponsiveContainer width="100%" height={250}>
+              <h4 className="text-xs sm:text-sm font-semibold mb-3 sm:mb-4">Invoice Breakdown</h4>
+              <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
                   <Pie
                     data={invoiceData.breakdown}
@@ -335,17 +335,17 @@ const MockDashboard = () => {
             </div>
 
             <div>
-              <h4 className="text-sm font-semibold mb-4">Line Items</h4>
-              <div className="space-y-3">
+              <h4 className="text-xs sm:text-sm font-semibold mb-3 sm:mb-4">Line Items</h4>
+              <div className="space-y-2 sm:space-y-3">
                 {invoiceData.lineItems.map((item, idx) => (
-                  <div key={idx} className="flex justify-between items-start p-3 bg-muted/30 rounded-lg">
+                  <div key={idx} className="flex justify-between items-start p-2 sm:p-3 bg-muted/30 rounded-lg">
                     <div>
-                      <p className="font-medium text-sm">{item.product}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="font-medium text-xs sm:text-sm">{item.product}</p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">
                         {formatNumber(item.quantity)} × {formatCurrency(item.rate)}
                       </p>
                     </div>
-                    <p className="font-semibold">{formatCurrency(item.amount)}</p>
+                    <p className="font-semibold text-xs sm:text-base">{formatCurrency(item.amount)}</p>
                   </div>
                 ))}
               </div>
@@ -357,19 +357,19 @@ const MockDashboard = () => {
   );
 
   const renderCostExplorerDashboard = () => (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <Card className="border-none shadow-md">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-lg font-semibold">Cost Analysis</CardTitle>
+        <CardHeader className="pb-3 sm:pb-4">
+          <CardTitle className="text-base sm:text-lg font-semibold">Cost Analysis</CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="products" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="products">By Product</TabsTrigger>
-              <TabsTrigger value="tags">By Tag</TabsTrigger>
+              <TabsTrigger value="products" className="text-xs sm:text-sm">By Product</TabsTrigger>
+              <TabsTrigger value="tags" className="text-xs sm:text-sm">By Tag</TabsTrigger>
             </TabsList>
-            <TabsContent value="products" className="mt-0 space-y-4">
-              <ResponsiveContainer width="100%" height={300}>
+            <TabsContent value="products" className="mt-0 space-y-3 sm:space-y-4">
+              <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={costExplorerData.byProduct}>
                   <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                   <XAxis dataKey="product" fontSize={11} />
@@ -383,20 +383,20 @@ const MockDashboard = () => {
 
               <div className="space-y-2">
                 {costExplorerData.byProduct.map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                    <span className="font-medium text-sm">{item.product}</span>
-                    <Badge variant="outline" style={{ 
+                  <div key={idx} className="flex items-center justify-between p-2 sm:p-3 bg-muted/30 rounded-lg">
+                    <span className="font-medium text-xs sm:text-sm">{item.product}</span>
+                    <Badge variant="outline" className="text-[10px] sm:text-xs" style={{ 
                       borderColor: item.growth > 60 ? colors.primary : colors.accent,
                       color: item.growth > 60 ? colors.primary : colors.accent
                     }}>
-                      +{item.growth}% growth
+                      +{item.growth}%
                     </Badge>
                   </div>
                 ))}
               </div>
             </TabsContent>
             <TabsContent value="tags" className="mt-0">
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
                   <Pie
                     data={costExplorerData.byTag}
@@ -438,7 +438,7 @@ const MockDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-screen bg-background p-3 sm:p-6">
       <style>
         {`
           :root {
@@ -448,15 +448,15 @@ const MockDashboard = () => {
         `}
       </style>
       <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <div>
-              <h1 className="text-2xl font-semibold mb-1">Customer Dashboard</h1>
-              <p className="text-sm text-muted-foreground">
+              <h1 className="text-xl sm:text-2xl font-semibold mb-1">Customer Dashboard</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 Powered by Metronome • Customer ID: {customerId}
               </p>
             </div>
-            <div className="h-8 w-8 rounded-full" style={{ backgroundColor: colors.primary }} />
+            <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-full" style={{ backgroundColor: colors.primary }} />
           </div>
         </div>
         {renderDashboard()}

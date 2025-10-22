@@ -53,28 +53,28 @@ const EmbeddableDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="container mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-12">
         {/* Header */}
-        <div className="mb-10">
+        <div className="mb-6 sm:mb-10">
           <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="h-8 w-8 text-primary" />
-            <h1 className="text-4xl font-semibold tracking-tight">Embeddable Dashboards</h1>
+            <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+            <h1 className="text-2xl sm:text-4xl font-semibold tracking-tight">Embeddable Dashboards</h1>
           </div>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-muted-foreground text-sm sm:text-lg">
             Create beautiful, branded usage dashboards for your customers
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-2 gap-4 sm:gap-8">
           {/* Configuration Panel */}
           <Card className="premium-card h-fit">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-2xl font-semibold">Dashboard Configuration</CardTitle>
-              <CardDescription>
+            <CardHeader className="pb-3 sm:pb-4">
+              <CardTitle className="text-xl sm:text-2xl font-semibold">Dashboard Configuration</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
                 Customize and generate embeddable dashboards
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4 sm:space-y-6">
               {/* Customer Selection */}
               <div className="space-y-2">
                 <Label htmlFor="customer" className="text-sm font-medium">Customer</Label>
@@ -162,23 +162,23 @@ const EmbeddableDashboard = () => {
               {/* Generated URL */}
               {embeddableUrl && (
                 <div className="space-y-3 pt-4 border-t">
-                  <Label className="text-sm font-medium">Embeddable URL</Label>
+                  <Label className="text-xs sm:text-sm font-medium">Embeddable URL</Label>
                   <div className="flex gap-2">
                     <Input
                       value={embeddableUrl}
                       readOnly
-                      className="font-mono text-xs flex-1"
+                      className="font-mono text-[10px] sm:text-xs flex-1"
                     />
-                    <Button onClick={copyToClipboard} variant="outline" size="icon">
+                    <Button onClick={copyToClipboard} variant="outline" size="icon" className="shrink-0">
                       <Copy className="h-4 w-4" />
                     </Button>
                   </div>
-                  <div className="flex gap-2">
-                    <Button onClick={copyIframeCode} variant="secondary" className="flex-1">
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button onClick={copyIframeCode} variant="secondary" className="flex-1 text-xs sm:text-sm">
                       <Copy className="h-4 w-4 mr-2" />
                       Copy iframe Code
                     </Button>
-                    <Button asChild variant="default" className="flex-1">
+                    <Button asChild variant="default" className="flex-1 text-xs sm:text-sm">
                       <a href={embeddableUrl} target="_blank" rel="noopener noreferrer">
                         <ExternalLink className="h-4 w-4 mr-2" />
                         Preview
@@ -192,9 +192,9 @@ const EmbeddableDashboard = () => {
 
           {/* Preview Panel */}
           <Card className="premium-card">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-2xl font-semibold">Live Preview</CardTitle>
-              <CardDescription>
+            <CardHeader className="pb-3 sm:pb-4">
+              <CardTitle className="text-xl sm:text-2xl font-semibold">Live Preview</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
                 See how your dashboard will appear
               </CardDescription>
             </CardHeader>
@@ -203,13 +203,13 @@ const EmbeddableDashboard = () => {
                 <div className="border rounded-lg overflow-hidden bg-background" style={{ boxShadow: 'var(--shadow-elegant)' }}>
                   <iframe
                     src={embeddableUrl}
-                    className="w-full h-[600px]"
+                    className="w-full h-[400px] sm:h-[600px]"
                     title="Dashboard Preview"
                   />
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-[600px] border rounded-lg bg-muted/30">
-                  <p className="text-muted-foreground text-center">
+                <div className="flex items-center justify-center h-[400px] sm:h-[600px] border rounded-lg bg-muted/30">
+                  <p className="text-muted-foreground text-center text-xs sm:text-sm px-4">
                     Select a customer and dashboard type to preview
                   </p>
                 </div>
@@ -219,17 +219,17 @@ const EmbeddableDashboard = () => {
         </div>
 
         {/* Integration Guide */}
-        <Card className="premium-card mt-8">
+        <Card className="premium-card mt-4 sm:mt-8">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold">Integration Guide</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-lg sm:text-xl font-semibold">Integration Guide</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
               How to embed Metronome dashboards in your application
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <h3 className="font-semibold text-sm">Using an iframe</h3>
-              <pre className="bg-muted p-4 rounded-md overflow-x-auto text-xs">
+              <h3 className="font-semibold text-xs sm:text-sm">Using an iframe</h3>
+              <pre className="bg-muted p-3 sm:p-4 rounded-md overflow-x-auto text-[10px] sm:text-xs">
 {`<iframe 
   src="${embeddableUrl || 'https://your-app.com/mock-dashboard?...'}"
   width="100%"
@@ -239,8 +239,8 @@ const EmbeddableDashboard = () => {
               </pre>
             </div>
             <div className="space-y-2">
-              <h3 className="font-semibold text-sm">Using the Metronome SDK</h3>
-              <pre className="bg-muted p-4 rounded-md overflow-x-auto text-xs">
+              <h3 className="font-semibold text-xs sm:text-sm">Using the Metronome SDK</h3>
+              <pre className="bg-muted p-3 sm:p-4 rounded-md overflow-x-auto text-[10px] sm:text-xs">
 {`import { MetronomeEmbed } from '@metronome/embed';
 
 <MetronomeEmbed

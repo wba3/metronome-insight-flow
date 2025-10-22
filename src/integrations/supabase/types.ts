@@ -14,7 +14,242 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      branding_settings: {
+        Row: {
+          company_name: string | null
+          created_at: string | null
+          customer_id: string | null
+          id: string
+          logo_url: string | null
+          primary_color: string | null
+          secondary_color: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string
+          logo_url?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string
+          logo_url?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "branding_settings_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commit_data: {
+        Row: {
+          contract_id: string
+          customer_id: string | null
+          end_date: string
+          id: string
+          metadata: Json | null
+          metronome_customer_id: string
+          remaining_amount: number
+          start_date: string
+          status: string
+          synced_at: string | null
+          total_amount: number
+        }
+        Insert: {
+          contract_id: string
+          customer_id?: string | null
+          end_date: string
+          id?: string
+          metadata?: Json | null
+          metronome_customer_id: string
+          remaining_amount: number
+          start_date: string
+          status: string
+          synced_at?: string | null
+          total_amount: number
+        }
+        Update: {
+          contract_id?: string
+          customer_id?: string | null
+          end_date?: string
+          id?: string
+          metadata?: Json | null
+          metronome_customer_id?: string
+          remaining_amount?: number
+          start_date?: string
+          status?: string
+          synced_at?: string | null
+          total_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commit_data_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customers: {
+        Row: {
+          created_at: string | null
+          id: string
+          industry: string | null
+          metronome_customer_id: string
+          name: string
+          tier: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          industry?: string | null
+          metronome_customer_id: string
+          name: string
+          tier?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          industry?: string | null
+          metronome_customer_id?: string
+          name?: string
+          tier?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      invoice_data: {
+        Row: {
+          amount: number
+          customer_id: string | null
+          id: string
+          invoice_id: string
+          metadata: Json | null
+          metronome_customer_id: string
+          period_end: string
+          period_start: string
+          status: string
+          synced_at: string | null
+        }
+        Insert: {
+          amount: number
+          customer_id?: string | null
+          id?: string
+          invoice_id: string
+          metadata?: Json | null
+          metronome_customer_id: string
+          period_end: string
+          period_start: string
+          status: string
+          synced_at?: string | null
+        }
+        Update: {
+          amount?: number
+          customer_id?: string | null
+          id?: string
+          invoice_id?: string
+          metadata?: Json | null
+          metronome_customer_id?: string
+          period_end?: string
+          period_start?: string
+          status?: string
+          synced_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_data_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      usage_data: {
+        Row: {
+          customer_id: string | null
+          id: string
+          metadata: Json | null
+          metric_name: string
+          metronome_customer_id: string
+          synced_at: string | null
+          timestamp: string
+          value: number
+        }
+        Insert: {
+          customer_id?: string | null
+          id?: string
+          metadata?: Json | null
+          metric_name: string
+          metronome_customer_id: string
+          synced_at?: string | null
+          timestamp: string
+          value: number
+        }
+        Update: {
+          customer_id?: string | null
+          id?: string
+          metadata?: Json | null
+          metric_name?: string
+          metronome_customer_id?: string
+          synced_at?: string | null
+          timestamp?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usage_data_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhook_events: {
+        Row: {
+          event_data: Json
+          event_type: string
+          id: string
+          processed: boolean | null
+          processed_at: string | null
+          received_at: string | null
+        }
+        Insert: {
+          event_data: Json
+          event_type: string
+          id?: string
+          processed?: boolean | null
+          processed_at?: string | null
+          received_at?: string | null
+        }
+        Update: {
+          event_data?: Json
+          event_type?: string
+          id?: string
+          processed?: boolean | null
+          processed_at?: string | null
+          received_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

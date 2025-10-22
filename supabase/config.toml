@@ -1,1 +1,4 @@
 project_id = "plbyxkapqmcvktldnban"
+
+[functions.metronome-webhook]
+verify_jwt = false

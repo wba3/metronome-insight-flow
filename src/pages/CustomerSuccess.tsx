@@ -5,25 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-
-const burnRateData = [
-  { week: "W1", expected: 8, actual: 12, remaining: 88 },
-  { week: "W2", expected: 16, actual: 22, remaining: 78 },
-  { week: "W3", expected: 24, actual: 35, remaining: 65 },
-  { week: "W4", expected: 32, actual: 45, remaining: 55 },
-  { week: "W5", expected: 40, actual: 58, remaining: 42 },
-  { week: "W6", expected: 48, actual: 68, remaining: 32 },
-];
-
-const accountHealth = [
-  { name: "Acme Corp", health: 92, trend: "up", risk: "low", nextAction: "Quarterly Review" },
-  { name: "TechStart Inc", health: 78, trend: "stable", risk: "medium", nextAction: "Usage Check-in" },
-  { name: "DataFlow Ltd", health: 45, trend: "down", risk: "high", nextAction: "Urgent: Engagement Plan" },
-  { name: "CloudScale", health: 88, trend: "up", risk: "low", nextAction: "Expansion Discussion" },
-  { name: "InnovateCo", health: 62, trend: "down", risk: "medium", nextAction: "Training Session" },
-];
+import { useCommitData, useCustomers } from "@/hooks/useMetronomeRealtime";
+import { useMemo } from "react";
 
 const CustomerSuccess = () => {
+  const { data: commits = [] } = useCommitData();
+  const { data: customers = [] } = useCustomers();
+
   const getHealthColor = (health: number) => {
     if (health >= 80) return "hsl(var(--success))";
     if (health >= 60) return "hsl(var(--warning))";
@@ -45,6 +33,76 @@ const CustomerSuccess = () => {
     return "→";
   };
 
+  // Calculate burn rate data (simulated weekly view)
+  const burnRateData = useMemo(() => {
+    if (commits.length === 0) return [];
+    
+    const avgCommit = commits[0];
+    const burned = avgCommit.total_amount - avgCommit.remaining_amount;
+    const burnRate = (burned / avgCommit.total_amount) * 100;
+    
+    return Array.from({ length: 6 }, (_, i) => ({
+      week: `W${i + 1}`,
+      expected: (i + 1) * 8,
+      actual: Math.min((i + 1) * (burnRate / 6), 100),
+      remaining: 100 - Math.min((i + 1) * (burnRate / 6), 100),
+    }));
+  }, [commits]);
+
+  // Calculate account health
+  const accountHealth = useMemo(() => {
+    return commits.map(commit => {
+      const customer = customers.find(c => c.metronome_customer_id === commit.metronome_customer_id);
+      const burned = commit.total_amount - commit.remaining_amount;
+      const burnRate = (burned / commit.total_amount) * 100;
+      
+      let health = 50;
+      let risk = "medium";
+      let trend = "stable";
+      
+      if (burnRate >= 60 && burnRate <= 110) {
+        health = 85;
+        risk = "low";
+        trend = "up";
+      } else if (burnRate > 110) {
+        health = 92;
+        risk = "low";
+        trend = "up";
+      } else {
+        health = 45;
+        risk = "high";
+        trend = "down";
+      }
+      
+      const nextAction = risk === "high" 
+        ? "Urgent: Engagement Plan" 
+        : risk === "medium" 
+        ? "Usage Check-in" 
+        : burnRate > 110 
+        ? "Expansion Discussion" 
+        : "Quarterly Review";
+      
+      return {
+        name: customer?.name || commit.metronome_customer_id,
+        health,
+        trend,
+        risk,
+        nextAction,
+        customerId: commit.metronome_customer_id,
+      };
+    }).slice(0, 10);
+  }, [commits, customers]);
+
+  const avgHealth = useMemo(() => {
+    if (accountHealth.length === 0) return 0;
+    return Math.round(
+      accountHealth.reduce((sum, acc) => sum + acc.health, 0) / accountHealth.length
+    );
+  }, [accountHealth]);
+
+  const atRiskCount = accountHealth.filter(a => a.risk === "high").length;
+  const healthyCount = accountHealth.filter(a => a.risk === "low").length;
+
   return (
     <div className="min-h-screen bg-gradient-subtle">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -60,15 +118,15 @@ const CustomerSuccess = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <MetricCard
             title="Portfolio Health Score"
-            value="78/100"
-            trend="+5 pts vs last month"
+            value={`${avgHealth}/100`}
+            trend={avgHealth > 70 ? "Healthy portfolio" : "Needs attention"}
             icon={<Heart size={24} />}
             trendDirection="up"
             color="hsl(var(--success))"
           />
           <MetricCard
             title="At-Risk Accounts"
-            value="3"
+            value={atRiskCount.toString()}
             trend="Requires immediate attention"
             icon={<AlertCircle size={24} />}
             trendDirection="down"
@@ -76,16 +134,16 @@ const CustomerSuccess = () => {
           />
           <MetricCard
             title="Healthy & Growing"
-            value="42"
-            trend="68% of portfolio"
+            value={healthyCount.toString()}
+            trend={`${Math.round((healthyCount / (accountHealth.length || 1)) * 100)}% of portfolio`}
             icon={<CheckCircle size={24} />}
             trendDirection="up"
             color="hsl(var(--accent))"
           />
           <MetricCard
-            title="Avg Response Time"
-            value="4.2 hrs"
-            trend="-1.3 hrs improvement"
+            title="Active Accounts"
+            value={commits.length.toString()}
+            trend={`${customers.length} total customers`}
             icon={<Clock size={24} />}
             trendDirection="up"
             color="hsl(var(--primary))"
@@ -99,60 +157,66 @@ const CustomerSuccess = () => {
             <CardDescription>Expected vs Actual consumption trajectory</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={320}>
-              <AreaChart data={burnRateData}>
-                <defs>
-                  <linearGradient id="expectedGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="actualGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--success))" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(var(--success))" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                <XAxis dataKey="week" stroke="hsl(var(--muted-foreground))" />
-                <YAxis stroke="hsl(var(--muted-foreground))" label={{ value: "Commit %", angle: -90, position: "insideLeft" }} />
-                <Tooltip
-                  content={({ active, payload }) => {
-                    if (active && payload && payload[0]) {
-                      const data = payload[0].payload;
-                      return (
-                        <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
-                          <p className="font-semibold mb-1">{data.week}</p>
-                          <p className="text-sm">Expected: <strong>{data.expected}%</strong></p>
-                          <p className="text-sm">Actual: <strong>{data.actual}%</strong></p>
-                          <p className="text-sm">Remaining: <strong>{data.remaining}%</strong></p>
-                          <p className={`text-sm font-bold ${data.actual > data.expected ? 'text-success' : 'text-destructive'}`}>
-                            {data.actual > data.expected ? "Over-consuming" : "Under-consuming"}
-                          </p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="expected"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill="url(#expectedGradient)"
-                  name="Expected Burn"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="actual"
-                  stroke="hsl(var(--success))"
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill="url(#actualGradient)"
-                  name="Actual Usage"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {burnRateData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={320}>
+                <AreaChart data={burnRateData}>
+                  <defs>
+                    <linearGradient id="expectedGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="actualGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--success))" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="hsl(var(--success))" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                  <XAxis dataKey="week" stroke="hsl(var(--muted-foreground))" />
+                  <YAxis stroke="hsl(var(--muted-foreground))" label={{ value: "Commit %", angle: -90, position: "insideLeft" }} />
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload[0]) {
+                        const data = payload[0].payload;
+                        return (
+                          <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
+                            <p className="font-semibold mb-1">{data.week}</p>
+                            <p className="text-sm">Expected: <strong>{data.expected}%</strong></p>
+                            <p className="text-sm">Actual: <strong>{Math.round(data.actual)}%</strong></p>
+                            <p className="text-sm">Remaining: <strong>{Math.round(data.remaining)}%</strong></p>
+                            <p className={`text-sm font-bold ${data.actual > data.expected ? 'text-success' : 'text-destructive'}`}>
+                              {data.actual > data.expected ? "Over-consuming" : "Under-consuming"}
+                            </p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="expected"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth={2}
+                    fillOpacity={1}
+                    fill="url(#expectedGradient)"
+                    name="Expected Burn"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="actual"
+                    stroke="hsl(var(--success))"
+                    strokeWidth={2}
+                    fillOpacity={1}
+                    fill="url(#actualGradient)"
+                    name="Actual Usage"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[320px] flex items-center justify-center text-muted-foreground">
+                <p>Sync Metronome data to view burn rate analysis</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -162,47 +226,53 @@ const CustomerSuccess = () => {
             <CardTitle className="text-2xl">Account Portfolio Overview</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-3 px-4 font-semibold">Account</th>
-                    <th className="text-left py-3 px-4 font-semibold">Health Score</th>
-                    <th className="text-left py-3 px-4 font-semibold">Trend</th>
-                    <th className="text-left py-3 px-4 font-semibold">Risk Level</th>
-                    <th className="text-left py-3 px-4 font-semibold">Next Action</th>
-                    <th className="text-left py-3 px-4 font-semibold">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {accountHealth.map((account, index) => (
-                    <tr key={index} className="border-b border-border hover:bg-accent/50 transition-colors">
-                      <td className="py-3 px-4">
-                        <strong>{account.name}</strong>
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-20">
-                            <Progress value={account.health} className="h-2" />
-                          </div>
-                          <strong style={{ color: getHealthColor(account.health) }}>
-                            {account.health}
-                          </strong>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="text-xl font-bold">{getTrendIcon(account.trend)}</span>
-                      </td>
-                      <td className="py-3 px-4">{getRiskBadge(account.risk)}</td>
-                      <td className="py-3 px-4 text-sm">{account.nextAction}</td>
-                      <td className="py-3 px-4">
-                        <Button size="sm" variant="default">View Details</Button>
-                      </td>
+            {accountHealth.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-3 px-4 font-semibold">Account</th>
+                      <th className="text-left py-3 px-4 font-semibold">Health Score</th>
+                      <th className="text-left py-3 px-4 font-semibold">Trend</th>
+                      <th className="text-left py-3 px-4 font-semibold">Risk Level</th>
+                      <th className="text-left py-3 px-4 font-semibold">Next Action</th>
+                      <th className="text-left py-3 px-4 font-semibold">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {accountHealth.map((account, index) => (
+                      <tr key={index} className="border-b border-border hover:bg-accent/50 transition-colors">
+                        <td className="py-3 px-4">
+                          <strong>{account.name}</strong>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-20">
+                              <Progress value={account.health} className="h-2" />
+                            </div>
+                            <strong style={{ color: getHealthColor(account.health) }}>
+                              {account.health}
+                            </strong>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="text-xl font-bold">{getTrendIcon(account.trend)}</span>
+                        </td>
+                        <td className="py-3 px-4">{getRiskBadge(account.risk)}</td>
+                        <td className="py-3 px-4 text-sm">{account.nextAction}</td>
+                        <td className="py-3 px-4">
+                          <Button size="sm" variant="default">View Details</Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="py-8 text-center text-muted-foreground">
+                <p>Sync Metronome data to view account portfolio</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -219,7 +289,7 @@ const CustomerSuccess = () => {
                   <span className="font-semibold text-destructive">Critical</span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  <strong>DataFlow Ltd</strong> health score dropped 23 points — usage down 40% in 2 weeks
+                  {atRiskCount} accounts at high risk — immediate engagement required
                 </p>
               </div>
 
@@ -229,17 +299,17 @@ const CustomerSuccess = () => {
                   <span className="font-semibold text-success">Opportunity</span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  <strong>CloudScale</strong> exceeding usage by 88% — ideal expansion candidate
+                  {healthyCount} healthy accounts — potential expansion candidates
                 </p>
               </div>
 
               <div className="p-4 rounded-lg border-l-4 border-accent bg-accent/5">
                 <div className="flex items-center gap-2 mb-2">
                   <Clock className="h-5 w-5 text-accent" />
-                  <span className="font-semibold text-accent">Scheduled</span>
+                  <span className="font-semibold text-accent">Portfolio</span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  5 QBRs this week — prepare usage reports and health summaries
+                  Monitoring {commits.length} active contracts for {customers.length} customers
                 </p>
               </div>
             </div>

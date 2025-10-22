@@ -3,11 +3,15 @@ import { MetricsCards } from "@/components/MetricsCards";
 import { UsageChart } from "@/components/UsageChart";
 import { CommitDrawdown } from "@/components/CommitDrawdown";
 import { FeatureShowcase } from "@/components/FeatureShowcase";
+import { MetronomeSync } from "@/components/MetronomeSync";
 
 const Index = () => {
   return (
     <div className="min-h-screen">
       <Hero />
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <MetronomeSync />
+      </div>
       <MetricsCards />
       <UsageChart />
       <CommitDrawdown />

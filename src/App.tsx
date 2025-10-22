@@ -9,6 +9,8 @@ import Executive from "./pages/Executive";
 import Sales from "./pages/Sales";
 import CustomerSuccess from "./pages/CustomerSuccess";
 import Product from "./pages/Product";
+import EmbeddableDashboard from "./pages/EmbeddableDashboard";
+import MockDashboard from "./pages/MockDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +28,8 @@ const App = () => (
           <Route path="/sales" element={<Sales />} />
           <Route path="/customer-success" element={<CustomerSuccess />} />
           <Route path="/product" element={<Product />} />
+          <Route path="/embeddable" element={<EmbeddableDashboard />} />
+          <Route path="/mock-dashboard" element={<MockDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

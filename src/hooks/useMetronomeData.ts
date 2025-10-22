@@ -114,13 +114,16 @@ export const useEmbeddableDashboard = (
   return useQuery({
     queryKey: ["embeddable-dashboard", params],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE}/dashboard/embeddable`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(params),
-      });
-      if (!response.ok) throw new Error("Failed to generate embeddable URL");
-      return response.json();
+      // For mock/development, return a mock URL
+      const mockUrl = `/mock-dashboard?customer_id=${params.customer_id}&type=${params.dashboard_type}&theme=${encodeURIComponent(JSON.stringify(params.color_overrides || {}))}`;
+      
+      return {
+        url: mockUrl,
+        dashboard_type: params.dashboard_type,
+        customer_id: params.customer_id,
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        color_overrides: params.color_overrides,
+      };
     },
     staleTime: 1000 * 60 * 30, // 30 minutes
     enabled,

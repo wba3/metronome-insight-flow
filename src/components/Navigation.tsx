@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { TrendingUp, DollarSign, Users, BarChart3, Home } from "lucide-react";
+import { TrendingUp, DollarSign, Users, BarChart3, Home, Monitor } from "lucide-react";
 
 const navItems = [
   { path: "/", label: "Home", icon: Home },
@@ -8,6 +8,7 @@ const navItems = [
   { path: "/sales", label: "Sales", icon: DollarSign },
   { path: "/customer-success", label: "Customer Success", icon: Users },
   { path: "/product", label: "Product", icon: BarChart3 },
+  { path: "/embeddable", label: "Embeddable", icon: Monitor },
 ];
 
 export const Navigation = () => {

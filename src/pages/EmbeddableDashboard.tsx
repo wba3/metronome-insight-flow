@@ -1,232 +1,263 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useCustomers } from "@/hooks/useMetronomeRealtime";
-import { useEmbeddableDashboard } from "@/hooks/useMetronomeData";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Copy, ExternalLink, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
-type DashboardType = "invoice" | "usage" | "commits_credits";
+const EmbeddableDashboard = () => {
+  const { data: customers = [] } = useCustomers();
+  const [selectedCustomer, setSelectedCustomer] = useState<string>("");
+  const [dashboardType, setDashboardType] = useState<string>("usage");
+  const [embeddableUrl, setEmbeddableUrl] = useState<string>("");
+  const [primaryColor, setPrimaryColor] = useState<string>("#00A86B");
+  const [accentColor, setAccentColor] = useState<string>("#5B5FFF");
 
-const DASHBOARD_TYPES: { value: DashboardType; label: string; description: string }[] = [
-  { 
-    value: "invoice", 
-    label: "Invoice Dashboard", 
-    description: "View current and historical invoices (draft, finalized, voided) up to 90 days old" 
-  },
-  { 
-    value: "usage", 
-    label: "Usage Dashboard", 
-    description: "Shows usage metrics for the past 30, 60, or 90 days" 
-  },
-  { 
-    value: "commits_credits", 
-    label: "Commits & Credits Dashboard", 
-    description: "View current and historical commit and credit grants, balances, and access schedules" 
-  },
-];
-
-export default function EmbeddableDashboard() {
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
-  const [selectedDashboardType, setSelectedDashboardType] = useState<DashboardType>("usage");
-  const [shouldFetchDashboard, setShouldFetchDashboard] = useState(false);
-
-  const { data: customers, isLoading: isLoadingCustomers } = useCustomers();
-  
-  const { 
-    data: dashboardData, 
-    isLoading: isLoadingDashboard,
-    error: dashboardError 
-  } = useEmbeddableDashboard(
-    {
-      customer_id: selectedCustomerId,
-      dashboard_type: selectedDashboardType,
-      color_overrides: {
-        primary_medium: "#0EA5E9",
-        gray_dark: "#1E293B",
-        background: "#FFFFFF",
-      },
-    },
-    shouldFetchDashboard && !!selectedCustomerId
-  );
-
-  const handleGenerateDashboard = () => {
-    if (!selectedCustomerId) {
-      toast.error("Please select a customer");
-      return;
+  useEffect(() => {
+    if (selectedCustomer && dashboardType) {
+      const params = new URLSearchParams({
+        customer_id: selectedCustomer,
+        type: dashboardType,
+        primary: primaryColor.replace("#", ""),
+        accent: accentColor.replace("#", ""),
+      });
+      
+      const url = `${window.location.origin}/mock-dashboard?${params.toString()}`;
+      setEmbeddableUrl(url);
     }
-    setShouldFetchDashboard(true);
+  }, [selectedCustomer, dashboardType, primaryColor, accentColor]);
+
+  const copyToClipboard = () => {
+    if (embeddableUrl) {
+      navigator.clipboard.writeText(embeddableUrl);
+      toast.success("URL copied to clipboard!");
+    }
   };
 
-  const handleReset = () => {
-    setShouldFetchDashboard(false);
-    setSelectedCustomerId("");
-    setSelectedDashboardType("usage");
+  const copyIframeCode = () => {
+    const iframeCode = `<iframe 
+  src="${embeddableUrl}"
+  width="100%"
+  height="600px"
+  frameborder="0"
+  allowfullscreen
+></iframe>`;
+    
+    navigator.clipboard.writeText(iframeCode);
+    toast.success("Iframe code copied to clipboard!");
   };
-
-  const selectedDashboard = DASHBOARD_TYPES.find(d => d.value === selectedDashboardType);
-  const selectedCustomer = customers?.find(c => c.metronome_customer_id === selectedCustomerId);
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-4xl font-bold mb-2">Embeddable Customer Dashboards</h1>
-        <p className="text-muted-foreground">
-          Share Metronome data with your customers through customizable embeddable dashboards
-        </p>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Dashboard Configuration</CardTitle>
-          <CardDescription>
-            Select a customer and dashboard type to generate an embeddable URL
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Customer</label>
-              <Select
-                value={selectedCustomerId}
-                onValueChange={setSelectedCustomerId}
-                disabled={isLoadingCustomers}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a customer..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {customers?.map((customer) => (
-                    <SelectItem 
-                      key={customer.id} 
-                      value={customer.metronome_customer_id}
-                    >
-                      {customer.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Dashboard Type</label>
-              <Select
-                value={selectedDashboardType}
-                onValueChange={(value) => setSelectedDashboardType(value as DashboardType)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {DASHBOARD_TYPES.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+    <div className="min-h-screen bg-gradient-subtle">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Header */}
+        <div className="mb-10">
+          <div className="flex items-center gap-2 mb-2">
+            <Sparkles className="h-8 w-8 text-primary" />
+            <h1 className="text-4xl font-semibold tracking-tight">Embeddable Dashboards</h1>
           </div>
+          <p className="text-muted-foreground text-lg">
+            Create beautiful, branded usage dashboards for your customers
+          </p>
+        </div>
 
-          {selectedDashboard && (
-            <div className="p-4 bg-muted rounded-lg">
-              <p className="text-sm text-muted-foreground">
-                {selectedDashboard.description}
-              </p>
-            </div>
-          )}
+        <div className="grid lg:grid-cols-2 gap-8">
+          {/* Configuration Panel */}
+          <Card className="premium-card h-fit">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-2xl font-semibold">Dashboard Configuration</CardTitle>
+              <CardDescription>
+                Customize and generate embeddable dashboards
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Customer Selection */}
+              <div className="space-y-2">
+                <Label htmlFor="customer" className="text-sm font-medium">Customer</Label>
+                <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
+                  <SelectTrigger id="customer" className="w-full">
+                    <SelectValue placeholder="Select a customer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {customers.map((customer) => (
+                      <SelectItem key={customer.id} value={customer.metronome_customer_id}>
+                        {customer.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <div className="flex gap-2">
-            <Button 
-              onClick={handleGenerateDashboard}
-              disabled={!selectedCustomerId || isLoadingDashboard}
-            >
-              {isLoadingDashboard && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Generate Dashboard
-            </Button>
-            {shouldFetchDashboard && (
-              <Button variant="outline" onClick={handleReset}>
-                Reset
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              {/* Dashboard Type */}
+              <div className="space-y-2">
+                <Label htmlFor="type" className="text-sm font-medium">Dashboard Type</Label>
+                <Select value={dashboardType} onValueChange={setDashboardType}>
+                  <SelectTrigger id="type" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="usage">Usage & Metrics</SelectItem>
+                    <SelectItem value="commits">Commits & Credits</SelectItem>
+                    <SelectItem value="invoice">Invoice Breakdown</SelectItem>
+                    <SelectItem value="cost-explorer">Cost Explorer</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-      {dashboardError && (
-        <Card className="border-destructive">
+              {/* Color Customization */}
+              <Tabs defaultValue="colors" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="colors">Colors</TabsTrigger>
+                  <TabsTrigger value="advanced">Advanced</TabsTrigger>
+                </TabsList>
+                <TabsContent value="colors" className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="primary-color" className="text-sm font-medium">Primary Color</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="primary-color"
+                        type="color"
+                        value={primaryColor}
+                        onChange={(e) => setPrimaryColor(e.target.value)}
+                        className="w-16 h-10 p-1 cursor-pointer"
+                      />
+                      <Input
+                        type="text"
+                        value={primaryColor}
+                        onChange={(e) => setPrimaryColor(e.target.value)}
+                        className="flex-1"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="accent-color" className="text-sm font-medium">Accent Color</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="accent-color"
+                        type="color"
+                        value={accentColor}
+                        onChange={(e) => setAccentColor(e.target.value)}
+                        className="w-16 h-10 p-1 cursor-pointer"
+                      />
+                      <Input
+                        type="text"
+                        value={accentColor}
+                        onChange={(e) => setAccentColor(e.target.value)}
+                        className="flex-1"
+                      />
+                    </div>
+                  </div>
+                </TabsContent>
+                <TabsContent value="advanced" className="pt-4">
+                  <p className="text-sm text-muted-foreground">
+                    Advanced customization options coming soon. Control fonts, layouts, and more.
+                  </p>
+                </TabsContent>
+              </Tabs>
+
+              {/* Generated URL */}
+              {embeddableUrl && (
+                <div className="space-y-3 pt-4 border-t">
+                  <Label className="text-sm font-medium">Embeddable URL</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={embeddableUrl}
+                      readOnly
+                      className="font-mono text-xs flex-1"
+                    />
+                    <Button onClick={copyToClipboard} variant="outline" size="icon">
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={copyIframeCode} variant="secondary" className="flex-1">
+                      <Copy className="h-4 w-4 mr-2" />
+                      Copy iframe Code
+                    </Button>
+                    <Button asChild variant="default" className="flex-1">
+                      <a href={embeddableUrl} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Preview
+                      </a>
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Preview Panel */}
+          <Card className="premium-card">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-2xl font-semibold">Live Preview</CardTitle>
+              <CardDescription>
+                See how your dashboard will appear
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {embeddableUrl ? (
+                <div className="border rounded-lg overflow-hidden bg-background" style={{ boxShadow: 'var(--shadow-elegant)' }}>
+                  <iframe
+                    src={embeddableUrl}
+                    className="w-full h-[600px]"
+                    title="Dashboard Preview"
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-[600px] border rounded-lg bg-muted/30">
+                  <p className="text-muted-foreground text-center">
+                    Select a customer and dashboard type to preview
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Integration Guide */}
+        <Card className="premium-card mt-8">
           <CardHeader>
-            <CardTitle className="text-destructive">Error Loading Dashboard</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              {dashboardError.message || "Failed to generate embeddable dashboard URL"}
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {shouldFetchDashboard && selectedCustomerId && dashboardData && (
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {selectedDashboard?.label} - {selectedCustomer?.name}
-            </CardTitle>
+            <CardTitle className="text-xl font-semibold">Integration Guide</CardTitle>
             <CardDescription>
-              Embeddable URL: <code className="text-xs">{dashboardData.url}</code>
+              How to embed Metronome dashboards in your application
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="relative w-full" style={{ height: "800px" }}>
-              <iframe
-                src={dashboardData.url}
-                className="w-full h-full border rounded-lg"
-                title={`${selectedDashboard?.label} for ${selectedCustomer?.name}`}
-                sandbox="allow-scripts allow-same-origin"
-              />
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {!shouldFetchDashboard && (
-        <Card>
-          <CardHeader>
-            <CardTitle>How to Use Embeddable Dashboards</CardTitle>
-          </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <h3 className="font-semibold mb-2">📊 Invoice Dashboard</h3>
-              <p className="text-sm text-muted-foreground">
-                Allows customers to view their current and historical invoices (draft, finalized, and voided), 
-                up to 90 days old. Customers can also manually attempt payment on outstanding invoices.
-              </p>
+            <div className="space-y-2">
+              <h3 className="font-semibold text-sm">Using an iframe</h3>
+              <pre className="bg-muted p-4 rounded-md overflow-x-auto text-xs">
+{`<iframe 
+  src="${embeddableUrl || 'https://your-app.com/mock-dashboard?...'}"
+  width="100%"
+  height="600px"
+  frameborder="0"
+></iframe>`}
+              </pre>
             </div>
-            <div>
-              <h3 className="font-semibold mb-2">📈 Usage Dashboard</h3>
-              <p className="text-sm text-muted-foreground">
-                Shows usage metrics attached to a customer's current contract for the past 30, 60, or 90 days.
-                Helps customers understand their consumption patterns.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-2">💰 Commits & Credits Dashboard</h3>
-              <p className="text-sm text-muted-foreground">
-                Allows customers to view their current and historical commit and credit grants, including 
-                remaining and historical balances, grant and deduction history, and access schedules.
-              </p>
-            </div>
-            <div className="pt-4 border-t">
-              <h3 className="font-semibold mb-2">🎨 Customization</h3>
-              <p className="text-sm text-muted-foreground">
-                Dashboard colors are automatically customized to match your brand using color overrides.
-                The embeddable URL can be used in iframes within your application.
-              </p>
+            <div className="space-y-2">
+              <h3 className="font-semibold text-sm">Using the Metronome SDK</h3>
+              <pre className="bg-muted p-4 rounded-md overflow-x-auto text-xs">
+{`import { MetronomeEmbed } from '@metronome/embed';
+
+<MetronomeEmbed
+  customerId="${selectedCustomer || 'customer_id'}"
+  dashboardType="${dashboardType}"
+  theme={{
+    primary: "${primaryColor}",
+    accent: "${accentColor}"
+  }}
+/>`}
+              </pre>
             </div>
           </CardContent>
         </Card>
-      )}
+      </div>
     </div>
   );
-}
+};
+
+export default EmbeddableDashboard;

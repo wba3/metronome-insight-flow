@@ -24,54 +24,68 @@ serve(async (req) => {
       throw new Error('METRONOME_API_KEY not configured');
     }
 
-    const apiUrl = `${metronomeBaseUrl}/v1/customers/list`;
-    console.log('Fetching customers from Metronome API:', apiUrl);
-
-    // Call Metronome API
-    const metronomeResponse = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${metronomeApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({}),
-    });
-
-    if (!metronomeResponse.ok) {
-      const errorText = await metronomeResponse.text();
-      console.error('Metronome API error:', errorText);
-      throw new Error(`Metronome API error: ${metronomeResponse.status} - ${errorText}`);
-    }
-
-    const metronomeData = await metronomeResponse.json();
-    console.log('Metronome response:', JSON.stringify(metronomeData).substring(0, 200));
-
     // Initialize Supabase client
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Cache customers in database
-    const customers = metronomeData.data || [];
-    
-    for (const customer of customers) {
-      await supabase
-        .from('customers')
-        .upsert({
-          metronome_customer_id: customer.id,
-          name: customer.name,
-          industry: customer.custom_fields?.industry || null,
-          tier: customer.custom_fields?.tier || null,
-        }, {
-          onConflict: 'metronome_customer_id'
-        });
-    }
+    let nextPage: string | null = null;
+    let totalFetched = 0;
+    let allCustomers: any[] = [];
 
-    console.log(`Cached ${customers.length} customers`);
+    // Fetch all customers with pagination
+    do {
+      const params = new URLSearchParams();
+      params.set('limit', '100');
+      if (nextPage) {
+        params.set('next_page', nextPage);
+      }
+
+      const apiUrl = `${metronomeBaseUrl}/v1/customers?${params.toString()}`;
+      console.log('Fetching customers from:', apiUrl);
+
+      const metronomeResponse = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${metronomeApiKey}`,
+        },
+      });
+
+      if (!metronomeResponse.ok) {
+        const errorText = await metronomeResponse.text();
+        console.error('Metronome API error:', metronomeResponse.status, errorText);
+        throw new Error(`Metronome API error: ${metronomeResponse.status} - ${errorText}`);
+      }
+
+      const responseData = await metronomeResponse.json();
+      const customers = responseData.data || responseData.customers || [];
+      nextPage = responseData.next_page || null;
+
+      console.log(`Fetched ${customers.length} customers, next_page: ${nextPage}`);
+
+      // Cache customers in the database
+      for (const customer of customers) {
+        await supabase
+          .from('customers')
+          .upsert({
+            metronome_customer_id: customer.id,
+            name: customer.name,
+            industry: customer.custom_fields?.industry || null,
+            tier: customer.custom_fields?.tier || null,
+          }, {
+            onConflict: 'metronome_customer_id'
+          });
+        totalFetched++;
+      }
+
+      allCustomers = allCustomers.concat(customers);
+    } while (nextPage);
+
+    console.log(`Successfully cached ${totalFetched} customers`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        data: metronomeData,
-        cached: customers.length 
+        data: allCustomers,
+        cached: totalFetched 
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

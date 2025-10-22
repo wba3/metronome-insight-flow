@@ -14,6 +14,44 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const webhookSecret = Deno.env.get('METRONOME_WEBHOOK_SECRET');
+    
+    // Verify webhook signature
+    const signature = req.headers.get('X-Metronome-Signature') || req.headers.get('X-Webhook-Signature');
+    
+    if (webhookSecret && signature) {
+      const body = await req.text();
+      const encoder = new TextEncoder();
+      const key = await crypto.subtle.importKey(
+        'raw',
+        encoder.encode(webhookSecret),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['verify']
+      );
+      
+      const signatureBuffer = Uint8Array.from(signature.split(',')[0].split('=')[1] || signature, c => c.charCodeAt(0));
+      const dataBuffer = encoder.encode(body);
+      
+      const isValid = await crypto.subtle.verify(
+        'HMAC',
+        key,
+        signatureBuffer,
+        dataBuffer
+      );
+      
+      if (!isValid) {
+        console.error('Invalid webhook signature');
+        return new Response(
+          JSON.stringify({ error: 'Invalid signature' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+        );
+      }
+      
+      const webhookData = JSON.parse(body);
+    } else {
+      console.warn('No webhook signature verification configured or provided');
+    }
     
     const webhookData = await req.json();
     

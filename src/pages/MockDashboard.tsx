@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   AreaChart, Area, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
@@ -21,6 +22,8 @@ const MockDashboard = () => {
     primary: `#${primary}`,
     accent: `#${accent}`,
   });
+
+  const [invoiceTimeRange, setInvoiceTimeRange] = useState("current");
 
   useEffect(() => {
     setColors({
@@ -69,6 +72,20 @@ const MockDashboard = () => {
       { name: "Compute", value: 9450, color: "#B384FF" },
       { name: "Support", value: 3060, color: "#FF7A59" },
     ],
+  };
+
+  const monthlyInvoiceData = [
+    { month: "May 2025", total: 58300, apiCalls: 34500, dataProcessing: 12800, compute: 8200, support: 2800 },
+    { month: "Jun 2025", total: 59200, apiCalls: 35100, dataProcessing: 13100, compute: 8400, support: 2600 },
+    { month: "Jul 2025", total: 61800, apiCalls: 36800, dataProcessing: 13500, compute: 8900, support: 2600 },
+    { month: "Aug 2025", total: 62100, apiCalls: 37200, dataProcessing: 13200, compute: 9100, support: 2600 },
+    { month: "Sep 2025", total: 64500, apiCalls: 38600, dataProcessing: 13800, compute: 9500, support: 2600 },
+    { month: "Oct 2025", total: 66400, apiCalls: 39800, dataProcessing: 14200, compute: 9800, support: 2600 },
+  ];
+
+  const calculateMonthlyAverage = () => {
+    const sum = monthlyInvoiceData.reduce((acc, month) => acc + month.total, 0);
+    return sum / monthlyInvoiceData.length;
   };
 
   const costExplorerData = {
@@ -299,16 +316,29 @@ const MockDashboard = () => {
 
   const renderInvoiceDashboard = () => (
     <div className="space-y-4 sm:space-y-6">
-      <Card className="border-none shadow-md">
-        <CardHeader className="pb-3 sm:pb-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-            <CardTitle className="text-base sm:text-lg font-semibold">Current Invoice</CardTitle>
-            <div className="text-left sm:text-right">
-              <p className="text-xs text-muted-foreground">June 2025</p>
-              <p className="text-xl sm:text-2xl font-semibold">{formatCurrency(invoiceData.total)}</p>
+      <div className="flex justify-end mb-3 sm:mb-4">
+        <Select value={invoiceTimeRange} onValueChange={setInvoiceTimeRange}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Select time range" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="current">Current Month</SelectItem>
+            <SelectItem value="trailing6">Trailing 6 Months</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {invoiceTimeRange === "current" ? (
+        <Card className="border-none shadow-md">
+          <CardHeader className="pb-3 sm:pb-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <CardTitle className="text-base sm:text-lg font-semibold">Current Invoice</CardTitle>
+              <div className="text-left sm:text-right">
+                <p className="text-xs text-muted-foreground">June 2025</p>
+                <p className="text-xl sm:text-2xl font-semibold">{formatCurrency(invoiceData.total)}</p>
+              </div>
             </div>
-          </div>
-        </CardHeader>
+          </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
             <div>
@@ -353,6 +383,100 @@ const MockDashboard = () => {
           </div>
         </CardContent>
       </Card>
+      ) : (
+        <div className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <Card className="border-none shadow-md">
+              <CardContent className="p-3 sm:p-5">
+                <div className="space-y-1">
+                  <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Total (6 Months)
+                  </p>
+                  <p className="text-lg sm:text-2xl font-semibold">
+                    {formatCurrency(monthlyInvoiceData.reduce((acc, m) => acc + m.total, 0))}
+                  </p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
+                    May - October 2025
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-none shadow-md">
+              <CardContent className="p-3 sm:p-5">
+                <div className="space-y-1">
+                  <p className="text-[10px] sm:text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Average Monthly
+                  </p>
+                  <p className="text-lg sm:text-2xl font-semibold">
+                    {formatCurrency(calculateMonthlyAverage())}
+                  </p>
+                  <div className="flex items-center gap-1 text-[10px] sm:text-xs">
+                    <TrendingUp className="h-3 w-3" style={{ color: colors.primary }} />
+                    <span style={{ color: colors.primary }}>+6.5% growth</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="border-none shadow-md">
+            <CardHeader className="pb-3 sm:pb-4">
+              <CardTitle className="text-base sm:text-lg font-semibold">Monthly Billing History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={monthlyInvoiceData}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                  <XAxis dataKey="month" fontSize={11} angle={-45} textAnchor="end" height={80} />
+                  <YAxis fontSize={12} tickFormatter={(value) => `$${value/1000}k`} />
+                  <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                  <Legend />
+                  <Bar dataKey="apiCalls" stackId="a" fill={colors.primary} name="API Calls" />
+                  <Bar dataKey="dataProcessing" stackId="a" fill={colors.accent} name="Data Processing" />
+                  <Bar dataKey="compute" stackId="a" fill="#B384FF" name="Compute" />
+                  <Bar dataKey="support" stackId="a" fill="#FF7A59" name="Support" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          <Card className="border-none shadow-md">
+            <CardHeader className="pb-3 sm:pb-4">
+              <CardTitle className="text-base sm:text-lg font-semibold">Monthly Breakdown</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 sm:space-y-3">
+                {monthlyInvoiceData.map((month, idx) => (
+                  <div key={idx} className="p-2 sm:p-3 bg-muted/30 rounded-lg">
+                    <div className="flex justify-between items-center mb-2">
+                      <p className="font-semibold text-xs sm:text-sm">{month.month}</p>
+                      <p className="font-semibold text-sm sm:text-base">{formatCurrency(month.total)}</p>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] sm:text-xs">
+                      <div>
+                        <p className="text-muted-foreground">API Calls</p>
+                        <p className="font-medium">{formatCurrency(month.apiCalls)}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Data</p>
+                        <p className="font-medium">{formatCurrency(month.dataProcessing)}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Compute</p>
+                        <p className="font-medium">{formatCurrency(month.compute)}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Support</p>
+                        <p className="font-medium">{formatCurrency(month.support)}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 
